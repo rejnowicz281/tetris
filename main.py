@@ -22,10 +22,10 @@ pygame.display.set_icon(icon)
 
 class Block:
     def __init__(self):
+        self.previous_pivot = None
         self.pivot = Vector2(COLS / 2, 15)
 
     def draw(self):
-        print(f"drawing at {self.pivot.x}, {self.pivot.y}")
         x = self.pivot.x * CELL_SIZE
         y = self.pivot.y * CELL_SIZE
         rect = pygame.Rect(x, y, CELL_SIZE, CELL_SIZE)
@@ -33,12 +33,15 @@ class Block:
 
     def move_down(self):
         self.pivot.y += 1
+        self.previous_pivot = Vector2(self.pivot.x, self.pivot.y - 1)
 
     def move_left(self):
         self.pivot.x -= 1
+        self.previous_pivot = Vector2(self.pivot.x + 1, self.pivot.y)
 
     def move_right(self):
         self.pivot.x += 1
+        self.previous_pivot = Vector2(self.pivot.x - 1, self.pivot.y)
 
 
 class Game:
@@ -53,13 +56,15 @@ class Game:
     def new_block(self):
         self.block = Block()
 
-    def handle_collision(self):
-        if self.block.pivot.x < 0:
-            self.block.pivot.x = 0
-        elif self.block.pivot.x > COLS - 1:
-            self.block.pivot.x = COLS - 1
-        elif self.block.pivot.y == ROWS:
-            self.block.pivot.y -= 1
+    def handle_horizontal_collision(self):
+        placed_pivots = [block.pivot for block in self.placed_blocks]
+        if self.block.pivot.x < 0 or self.block.pivot.x > COLS - 1 or self.block.pivot in placed_pivots:
+            self.block.pivot = self.block.previous_pivot
+
+    def handle_vertical_collision(self):
+        placed_pivots = [block.pivot for block in self.placed_blocks]
+        if self.block.pivot.y >= ROWS or self.block.pivot in placed_pivots:
+            self.block.pivot = self.block.previous_pivot
             self.placed_blocks.append(self.block)
             self.new_block()
 
@@ -81,12 +86,13 @@ while running:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_LEFT:
                 game.block.move_left()
+                game.handle_horizontal_collision()
             elif event.key == pygame.K_RIGHT:
                 game.block.move_right()
+                game.handle_horizontal_collision()
             elif event.key == pygame.K_DOWN:
                 game.block.move_down()
-
-    game.handle_collision()
+                game.handle_vertical_collision()
 
     game.draw_placed_blocks()
     game.block.draw()
