@@ -68,6 +68,24 @@ class Game:
             self.placed_blocks.append(self.block)
             self.new_block()
 
+    def handle_clear(self):
+        if self.placed_blocks:
+            current_row = ROWS - 1  # First, check the lowermost row
+            while current_row >= 0:
+                current_row_blocks = 0
+                for block in self.placed_blocks:
+                    if block.pivot.y == current_row:
+                        current_row_blocks += 1  # If there is a block in the current row, increment by 1
+
+                if current_row_blocks == COLS:  # If row is full
+                    i = 0
+                    while i in range(len(self.placed_blocks)):
+                        if self.placed_blocks[i].pivot.y == current_row:
+                            del self.placed_blocks[i]  # Delete all blocks from a row
+                        else:
+                            i += 1
+                current_row -= 1
+
 
 # Game Loop
 game = Game()
@@ -93,6 +111,11 @@ while running:
             elif event.key == pygame.K_DOWN:
                 game.block.move_down()
                 game.handle_vertical_collision()
+            elif event.key == pygame.K_SPACE:
+                for blokign in game.placed_blocks:
+                    print(blokign.pivot.x, blokign.pivot.y)
+
+    game.handle_clear()
 
     game.draw_placed_blocks()
     game.block.draw()
