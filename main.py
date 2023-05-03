@@ -70,21 +70,23 @@ class Game:
 
     def handle_clear(self):
         if self.placed_blocks:
-            current_row = ROWS - 1  # First, check the lowermost row
-            while current_row >= 0:
-                current_row_blocks = 0
-                for block in self.placed_blocks:
-                    if block.pivot.y == current_row:
-                        current_row_blocks += 1  # If there is a block in the current row, increment by 1
+            lowermost_row_blocks_count = 0
+            for block in self.placed_blocks:
+                if block.pivot.y == ROWS - 1:
+                    lowermost_row_blocks_count += 1  # If block is in the lowermost row, increment by 1
 
-                if current_row_blocks == COLS:  # If row is full
+                if lowermost_row_blocks_count == COLS:  # If lowermost row is full
                     i = 0
-                    while i in range(len(self.placed_blocks)):
-                        if self.placed_blocks[i].pivot.y == current_row:
-                            del self.placed_blocks[i]  # Delete all blocks from a row
+                    while i in range(len(self.placed_blocks)):  # Delete all blocks from the lowermost row
+                        if self.placed_blocks[i].pivot.y == ROWS - 1:
+                            del self.placed_blocks[i]
                         else:
                             i += 1
-                current_row -= 1
+
+                    for block_b in self.placed_blocks:  # Move all blocks down
+                        block_b.move_down()
+
+                    return self.handle_clear()  # Function runs until lowermost row is not full
 
 
 # Game Loop
