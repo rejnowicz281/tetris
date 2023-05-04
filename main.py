@@ -15,6 +15,12 @@ SCREEN_WIDTH = COLS * CELL_SIZE
 SCREEN_HEIGHT = ROWS * CELL_SIZE
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
+
+def draw_text(x, y, text, font=pygame.font.Font('freesansbold.ttf', 32), color=(255, 255, 255)):
+    content = font.render(text, True, color)
+    screen.blit(content, (x, y))
+
+
 # Title and Icon
 pygame.display.set_caption("Tetris")
 icon = pygame.image.load('icon.png')
@@ -118,12 +124,17 @@ class Game:
     def __init__(self):
         self.placed_blocks = []
         self.piece = Piece()
+        self.state = "running"
 
     def draw_placed_blocks(self):
         [block.draw() for block in self.placed_blocks]
 
-    def new_piece(self):
+    def spawn_piece(self):
         self.piece = Piece()
+        placed_positions = [block.pos for block in self.placed_blocks]
+        for piece_block in self.piece.blocks:
+            if piece_block.pos in placed_positions:
+                self.state = "game_over"
 
     def handle_horizontal_collision(self):
         placed_positions = [block.pos for block in self.placed_blocks]
@@ -137,8 +148,8 @@ class Game:
             if piece_block.pos.y >= ROWS or piece_block.pos in placed_positions:
                 self.piece.set_previous_pos()
                 [self.placed_blocks.append(block) for block in self.piece.blocks]
-                self.new_piece()
                 self.handle_clear()
+                self.spawn_piece()
 
     def handle_clear(self, current_row=ROWS - 1):
         if self.placed_blocks and current_row >= 0:
@@ -179,20 +190,25 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
-        if event.type == pygame.KEYDOWN:
+        if event.type == pygame.KEYDOWN and game.state == "running":
             if event.key == pygame.K_LEFT:
                 game.piece.move_left()
                 game.handle_horizontal_collision()
             elif event.key == pygame.K_RIGHT:
                 game.piece.move_right()
                 game.handle_horizontal_collision()
-    keys = pygame.key.get_pressed()
 
-    if keys[pygame.K_DOWN]:
-        game.piece.move_down()
-        game.handle_vertical_collision()
+    game.piece.draw()
+
+    if game.state == "running":
+        keys = pygame.key.get_pressed()
+
+        if keys[pygame.K_DOWN]:
+            game.piece.move_down()
+            game.handle_vertical_collision()
+    else:
+        draw_text(10, 10, "GAME OVER")
 
     game.draw_placed_blocks()
-    game.piece.draw()
 
     pygame.display.update()
