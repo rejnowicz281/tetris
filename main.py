@@ -139,24 +139,29 @@ class Game:
                 [self.placed_blocks.append(block) for block in self.piece.blocks]
                 self.new_piece()
 
-    def handle_clear(self):
-        if self.placed_blocks:
-            lowermost_row_blocks_count = 0
+    def handle_clear(self, current_row=ROWS - 1):
+        if self.placed_blocks and current_row >= 0:
+            current_row_blocks_count = 0
             for block in self.placed_blocks:
-                if block.pos.y == ROWS - 1:
-                    lowermost_row_blocks_count += 1  # If block is in the lowermost row, increment by 1
-                if lowermost_row_blocks_count == COLS:  # If lowermost row is full
+                if block.pos.y == current_row:
+                    current_row_blocks_count += 1  # If block is in the current row, increment by 1
+
+                if current_row_blocks_count == COLS:  # If current row is full
                     i = 0
-                    while i in range(len(self.placed_blocks)):  # Delete all blocks from the lowermost row
-                        if self.placed_blocks[i].pos.y == ROWS - 1:
+                    while i in range(len(self.placed_blocks)):  # Delete all blocks from the current row
+                        if self.placed_blocks[i].pos.y == current_row:
                             del self.placed_blocks[i]
                         else:
                             i += 1
 
-                    for block_b in self.placed_blocks:  # Move all blocks down
-                        block_b.move_down()
+                    for block_b in self.placed_blocks:  # Move all blocks above the current row down
+                        if block_b.pos.y < current_row:
+                            block_b.move_down()
 
-                    return self.handle_clear()  # Function runs until lowermost row is not full
+                    return self.handle_clear()  # Function runs until current row is not full
+
+            if current_row_blocks_count != COLS:  # If current row isn't full, check the next one
+                return self.handle_clear(current_row - 1)
 
 
 # Game Loop
