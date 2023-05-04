@@ -48,14 +48,14 @@ class Block:
 class Piece:
     BLOCK_COMBINATIONS = [
         # I
-        [(SCREEN_MIDDLE, 0), (SCREEN_MIDDLE, 1),
-         (SCREEN_MIDDLE, 2),
-         (SCREEN_MIDDLE, 3)],
+        [(SCREEN_MIDDLE - 2, 0), (SCREEN_MIDDLE - 1, 0),
+         (SCREEN_MIDDLE, 0),
+         (SCREEN_MIDDLE + 1, 0)],
 
         # O
-        [(SCREEN_MIDDLE, 0), (SCREEN_MIDDLE + 1, 0),
-         (SCREEN_MIDDLE, 1),
-         (SCREEN_MIDDLE + 1, 1)],
+        [(SCREEN_MIDDLE - 1, 0), (SCREEN_MIDDLE, 0),
+         (SCREEN_MIDDLE - 1, 1),
+         (SCREEN_MIDDLE, 1)],
 
         # T
         [(SCREEN_MIDDLE - 1, 0), (SCREEN_MIDDLE, 0),
@@ -63,19 +63,19 @@ class Piece:
          (SCREEN_MIDDLE, 1)],
 
         # S
-        [(SCREEN_MIDDLE, 0), (SCREEN_MIDDLE + 1, 0),
-         (SCREEN_MIDDLE, 1),
-         (SCREEN_MIDDLE - 1, 1)],
+        [(SCREEN_MIDDLE - 1, 0), (SCREEN_MIDDLE, 0),
+         (SCREEN_MIDDLE - 1, 1),
+         (SCREEN_MIDDLE - 2, 1)],
 
         # Z
-        [(SCREEN_MIDDLE, 0), (SCREEN_MIDDLE + 1, 0),
-         (SCREEN_MIDDLE, -1),
-         (SCREEN_MIDDLE - 1, -1)],
+        [(SCREEN_MIDDLE - 1, 0), (SCREEN_MIDDLE, 0),
+         (SCREEN_MIDDLE, 1),
+         (SCREEN_MIDDLE + 1, 1)],
 
         # J
-        [(SCREEN_MIDDLE, 0), (SCREEN_MIDDLE, 1),
-         (SCREEN_MIDDLE + 1, 1),
-         (SCREEN_MIDDLE + 2, 1)],
+        [(SCREEN_MIDDLE - 1, 0), (SCREEN_MIDDLE - 1, 1),
+         (SCREEN_MIDDLE, 1),
+         (SCREEN_MIDDLE + 1, 1)],
 
         # L
         [(SCREEN_MIDDLE, 0), (SCREEN_MIDDLE, 1),
