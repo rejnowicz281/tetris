@@ -138,6 +138,7 @@ class Game:
                 self.piece.set_previous_pos()
                 [self.placed_blocks.append(block) for block in self.piece.blocks]
                 self.new_piece()
+                self.handle_clear()
 
     def handle_clear(self, current_row=ROWS - 1):
         if self.placed_blocks and current_row >= 0:
@@ -190,8 +191,6 @@ while running:
     if keys[pygame.K_DOWN]:
         game.piece.move_down()
         game.handle_vertical_collision()
-
-    game.handle_clear()
 
     game.draw_placed_blocks()
     game.piece.draw()
