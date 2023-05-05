@@ -162,12 +162,14 @@ class Game:
         for piece_block in self.current_piece.blocks:
             if piece_block.pos in placed_positions and piece_block.previous_pos is None:
                 self.state = "game_over"
+                break
 
     def handle_horizontal_collision(self):
         placed_positions = [block.pos for block in self.placed_blocks]
         for piece_block in self.current_piece.blocks:
             if piece_block.pos.x < 0 or piece_block.pos.x > COLS - 1 or piece_block.pos in placed_positions:
                 self.current_piece.set_previous_pos()
+                break
 
     def handle_vertical_collision(self):
         placed_positions = [block.pos for block in self.placed_blocks]
@@ -178,14 +180,14 @@ class Game:
                 self.handle_clear()
                 self.update_current_piece()
                 self.game_over_check()
-                if self.state == "game_over":
-                    break
+                break
 
     def handle_rotation_collision(self):
         placed_positions = [block.pos for block in self.placed_blocks]
         for piece_block in self.current_piece.blocks:
             if piece_block.pos.x < 0 or piece_block.pos.x > COLS - 1 or piece_block.pos.y >= ROWS or piece_block.pos in placed_positions:
                 self.current_piece.set_previous_pos()
+                break
 
     def handle_clear(self, current_row=ROWS - 1):
         if self.placed_blocks and current_row >= 0:
