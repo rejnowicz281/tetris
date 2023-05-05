@@ -35,7 +35,7 @@ class Block:
     def draw(self):
         x = self.pos.x * CELL_SIZE
         y = self.pos.y * CELL_SIZE
-        rect = pygame.Rect(x, y, CELL_SIZE-1, CELL_SIZE-1)
+        rect = pygame.Rect(x, y, CELL_SIZE - 1, CELL_SIZE - 1)
         pygame.draw.rect(screen, (0, 0, 255), rect)
 
     def move_down(self):
@@ -52,51 +52,59 @@ class Block:
 
 
 class Piece:
-    BLOCK_COMBINATIONS = [
-        # I
-        [(SCREEN_MIDDLE - 2, 0), (SCREEN_MIDDLE - 1, 0),
-         (SCREEN_MIDDLE, 0),
-         (SCREEN_MIDDLE + 1, 0)],
-
-        # O
-        [(SCREEN_MIDDLE - 1, 0), (SCREEN_MIDDLE, 0),
-         (SCREEN_MIDDLE - 1, 1),
-         (SCREEN_MIDDLE, 1)],
-
-        # T
-        [(SCREEN_MIDDLE - 1, 0), (SCREEN_MIDDLE, 0),
-         (SCREEN_MIDDLE + 1, 0),
-         (SCREEN_MIDDLE, 1)],
-
-        # S
-        [(SCREEN_MIDDLE - 1, 0), (SCREEN_MIDDLE, 0),
-         (SCREEN_MIDDLE - 1, 1),
-         (SCREEN_MIDDLE - 2, 1)],
-
-        # Z
-        [(SCREEN_MIDDLE - 1, 0), (SCREEN_MIDDLE, 0),
-         (SCREEN_MIDDLE, 1),
-         (SCREEN_MIDDLE + 1, 1)],
-
-        # J
-        [(SCREEN_MIDDLE - 1, 0), (SCREEN_MIDDLE - 1, 1),
-         (SCREEN_MIDDLE, 1),
-         (SCREEN_MIDDLE + 1, 1)],
-
-        # L
-        [(SCREEN_MIDDLE, 0), (SCREEN_MIDDLE, 1),
-         (SCREEN_MIDDLE - 1, 1),
-         (SCREEN_MIDDLE - 2, 1)]
-    ]
+    BLOCK_COMBINATIONS = {
+        "I": {
+            "initial": [(SCREEN_MIDDLE - 2, 0), (SCREEN_MIDDLE - 1, 0),
+                        (SCREEN_MIDDLE, 0),
+                        (SCREEN_MIDDLE + 1, 0)],
+            "rotations": None
+        },
+        "O": {
+            "initial": [(SCREEN_MIDDLE - 1, 0), (SCREEN_MIDDLE, 0),
+                        (SCREEN_MIDDLE - 1, 1),
+                        (SCREEN_MIDDLE, 1)],
+            "rotations": None
+        },
+        "T": {
+            "initial": [(SCREEN_MIDDLE - 1, 0), (SCREEN_MIDDLE, 0),
+                        (SCREEN_MIDDLE + 1, 0),
+                        (SCREEN_MIDDLE, 1)],
+            "rotations": None
+        },
+        "S": {
+            "initial": [(SCREEN_MIDDLE - 1, 0), (SCREEN_MIDDLE, 0),
+                        (SCREEN_MIDDLE - 1, 1),
+                        (SCREEN_MIDDLE - 2, 1)],
+            "rotations": None
+        },
+        "Z": {
+            "initial": [(SCREEN_MIDDLE - 1, 0), (SCREEN_MIDDLE, 0),
+                        (SCREEN_MIDDLE, 1),
+                        (SCREEN_MIDDLE + 1, 1)],
+            "rotations": None
+        },
+        "J": {
+            "initial": [(SCREEN_MIDDLE - 1, 0), (SCREEN_MIDDLE - 1, 1),
+                        (SCREEN_MIDDLE, 1),
+                        (SCREEN_MIDDLE + 1, 1)],
+            "rotations": None
+        },
+        "L": {
+            "initial": [(SCREEN_MIDDLE, 0), (SCREEN_MIDDLE, 1),
+                        (SCREEN_MIDDLE - 1, 1),
+                        (SCREEN_MIDDLE - 2, 1)],
+            "rotations": None
+        }
+    }
 
     def __init__(self):
         self.blocks = []
         self.randomize_blocks()
 
     def randomize_blocks(self):
-        positions = random.choice(self.BLOCK_COMBINATIONS)
+        positions = random.choice(list(self.BLOCK_COMBINATIONS.values()))
         blocks = []
-        [blocks.append(Block(Vector2(position))) for position in positions]
+        [blocks.append(Block(Vector2(position))) for position in positions["initial"]]
         self.blocks = blocks
 
     def draw(self):
