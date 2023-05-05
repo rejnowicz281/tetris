@@ -136,39 +136,56 @@ class Piece:
 class Game:
     def __init__(self):
         self.placed_blocks = []
-        self.piece = Piece()
+        self.pieces_queue = []
         self.state = "running"
+        self.update_pieces_queue()
+        self.current_piece = None
+        self.update_current_piece()
+
+    def update_current_piece(self):
+        self.current_piece = self.pieces_queue[0]
+        del self.pieces_queue[0]
+        self.update_pieces_queue()
+
+    def update_pieces_queue(self):
+        while len(self.pieces_queue) < 3:
+            random_piece = Piece()
+            current_shapes = [piece.shape for piece in self.pieces_queue]
+            if random_piece.shape not in current_shapes:
+                self.pieces_queue.append(random_piece)
 
     def draw_placed_blocks(self):
         [block.draw() for block in self.placed_blocks]
 
-    def spawn_piece(self):
-        self.piece = Piece()
+    def game_over_check(self):
         placed_positions = [block.pos for block in self.placed_blocks]
-        for piece_block in self.piece.blocks:
-            if piece_block.pos in placed_positions:
+        for piece_block in self.current_piece.blocks:
+            if piece_block.pos in placed_positions and piece_block.previous_pos is None:
                 self.state = "game_over"
 
     def handle_horizontal_collision(self):
         placed_positions = [block.pos for block in self.placed_blocks]
-        for piece_block in self.piece.blocks:
+        for piece_block in self.current_piece.blocks:
             if piece_block.pos.x < 0 or piece_block.pos.x > COLS - 1 or piece_block.pos in placed_positions:
-                self.piece.set_previous_pos()
+                self.current_piece.set_previous_pos()
 
     def handle_vertical_collision(self):
         placed_positions = [block.pos for block in self.placed_blocks]
-        for piece_block in self.piece.blocks:
+        for piece_block in self.current_piece.blocks:
             if piece_block.pos.y >= ROWS or piece_block.pos in placed_positions:
-                self.piece.set_previous_pos()
-                [self.placed_blocks.append(block) for block in self.piece.blocks]
+                self.current_piece.set_previous_pos()
+                [self.placed_blocks.append(block) for block in self.current_piece.blocks]
                 self.handle_clear()
-                self.spawn_piece()
+                self.update_current_piece()
+                self.game_over_check()
+                if self.state == "game_over":
+                    break
 
     def handle_rotation_collision(self):
         placed_positions = [block.pos for block in self.placed_blocks]
-        for piece_block in self.piece.blocks:
+        for piece_block in self.current_piece.blocks:
             if piece_block.pos.x < 0 or piece_block.pos.x > COLS - 1 or piece_block.pos.y >= ROWS or piece_block.pos in placed_positions:
-                self.piece.set_previous_pos()
+                self.current_piece.set_previous_pos()
 
     def handle_clear(self, current_row=ROWS - 1):
         if self.placed_blocks and current_row >= 0:
@@ -211,23 +228,23 @@ while running:
 
         if event.type == pygame.KEYDOWN and game.state == "running":
             if event.key == pygame.K_LEFT:
-                game.piece.move_left()
+                game.current_piece.move_left()
                 game.handle_horizontal_collision()
             elif event.key == pygame.K_RIGHT:
-                game.piece.move_right()
+                game.current_piece.move_right()
                 game.handle_horizontal_collision()
             elif event.key == pygame.K_UP:
-                game.piece.rotate()
+                game.current_piece.rotate()
                 game.handle_rotation_collision()
 
-    game.piece.draw()
+    game.current_piece.draw()
     game.draw_placed_blocks()
 
     if game.state == "running":
         keys = pygame.key.get_pressed()
 
         if keys[pygame.K_DOWN]:
-            game.piece.move_down()
+            game.current_piece.move_down()
             game.handle_vertical_collision()
     else:
         draw_text(10, 10, "GAME OVER")
