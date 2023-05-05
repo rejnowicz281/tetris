@@ -199,6 +199,7 @@ while running:
                 game.handle_horizontal_collision()
 
     game.piece.draw()
+    game.draw_placed_blocks()
 
     if game.state == "running":
         keys = pygame.key.get_pressed()
@@ -208,7 +209,5 @@ while running:
             game.handle_vertical_collision()
     else:
         draw_text(10, 10, "GAME OVER")
-
-    game.draw_placed_blocks()
 
     pygame.display.update()
