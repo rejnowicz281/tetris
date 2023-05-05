@@ -39,73 +39,70 @@ class Block:
         pygame.draw.rect(screen, (0, 0, 255), rect)
 
     def move_down(self):
-        self.pos.y += 1
-        self.previous_pos = Vector2(self.pos.x, self.pos.y - 1)
+        self.move(0, 1)
 
     def move_left(self):
-        self.pos.x -= 1
-        self.previous_pos = Vector2(self.pos.x + 1, self.pos.y)
+        self.move(-1, 0)
 
     def move_right(self):
-        self.pos.x += 1
-        self.previous_pos = Vector2(self.pos.x - 1, self.pos.y)
+        self.move(1, 0)
+
+    def move(self, x, y):
+        self.update_previous_pos()
+        self.pos.x += x
+        self.pos.y += y
+
+    def move_to(self, x, y):
+        self.update_previous_pos()
+        self.pos.x = x
+        self.pos.y = y
+
+    def update_previous_pos(self):
+        self.previous_pos = Vector2(self.pos.x, self.pos.y)
 
 
 class Piece:
     BLOCK_COMBINATIONS = {
-        "I": {
-            "initial": [(SCREEN_MIDDLE - 2, 0), (SCREEN_MIDDLE - 1, 0),
-                        (SCREEN_MIDDLE, 0),
-                        (SCREEN_MIDDLE + 1, 0)],
-            "rotations": None
-        },
-        "O": {
-            "initial": [(SCREEN_MIDDLE - 1, 0), (SCREEN_MIDDLE, 0),
-                        (SCREEN_MIDDLE - 1, 1),
-                        (SCREEN_MIDDLE, 1)],
-            "rotations": None
-        },
-        "T": {
-            "initial": [(SCREEN_MIDDLE - 1, 0), (SCREEN_MIDDLE, 0),
-                        (SCREEN_MIDDLE + 1, 0),
-                        (SCREEN_MIDDLE, 1)],
-            "rotations": None
-        },
-        "S": {
-            "initial": [(SCREEN_MIDDLE - 1, 0), (SCREEN_MIDDLE, 0),
-                        (SCREEN_MIDDLE - 1, 1),
-                        (SCREEN_MIDDLE - 2, 1)],
-            "rotations": None
-        },
-        "Z": {
-            "initial": [(SCREEN_MIDDLE - 1, 0), (SCREEN_MIDDLE, 0),
-                        (SCREEN_MIDDLE, 1),
-                        (SCREEN_MIDDLE + 1, 1)],
-            "rotations": None
-        },
-        "J": {
-            "initial": [(SCREEN_MIDDLE - 1, 0), (SCREEN_MIDDLE - 1, 1),
-                        (SCREEN_MIDDLE, 1),
-                        (SCREEN_MIDDLE + 1, 1)],
-            "rotations": None
-        },
-        "L": {
-            "initial": [(SCREEN_MIDDLE, 0), (SCREEN_MIDDLE, 1),
-                        (SCREEN_MIDDLE - 1, 1),
-                        (SCREEN_MIDDLE - 2, 1)],
-            "rotations": None
-        }
+        "I": [(SCREEN_MIDDLE - 2, 0), (SCREEN_MIDDLE - 1, 0),
+              (SCREEN_MIDDLE, 0),
+              (SCREEN_MIDDLE + 1, 0)],
+
+        "O": [(SCREEN_MIDDLE - 1, 0), (SCREEN_MIDDLE, 0),
+              (SCREEN_MIDDLE - 1, 1),
+              (SCREEN_MIDDLE, 1)],
+
+        "T": [(SCREEN_MIDDLE - 1, 0), (SCREEN_MIDDLE, 0),
+              (SCREEN_MIDDLE + 1, 0),
+              (SCREEN_MIDDLE, 1)],
+
+        "S": [(SCREEN_MIDDLE - 1, 0), (SCREEN_MIDDLE, 0),
+              (SCREEN_MIDDLE - 1, 1),
+              (SCREEN_MIDDLE - 2, 1)],
+
+        "Z": [(SCREEN_MIDDLE - 1, 0), (SCREEN_MIDDLE, 0),
+              (SCREEN_MIDDLE, 1),
+              (SCREEN_MIDDLE + 1, 1)],
+
+        "J": [(SCREEN_MIDDLE - 1, 0), (SCREEN_MIDDLE - 1, 1),
+              (SCREEN_MIDDLE, 1),
+              (SCREEN_MIDDLE + 1, 1)],
+
+        "L": [(SCREEN_MIDDLE, 0), (SCREEN_MIDDLE, 1),
+              (SCREEN_MIDDLE - 1, 1),
+              (SCREEN_MIDDLE - 2, 1)]
     }
 
     def __init__(self):
+        self.shape = None
         self.blocks = []
-        self.randomize_blocks()
+        self.initialize_blocks()
 
-    def randomize_blocks(self):
-        positions = random.choice(list(self.BLOCK_COMBINATIONS.values()))
-        blocks = []
-        [blocks.append(Block(Vector2(position))) for position in positions["initial"]]
+    def initialize_blocks(self):
+        random_shape = random.choice(list(self.BLOCK_COMBINATIONS.keys()))
+        combination = self.BLOCK_COMBINATIONS[random_shape]
+        blocks = [(Block(Vector2(position))) for position in combination]
         self.blocks = blocks
+        self.shape = random_shape
 
     def draw(self):
         for block in self.blocks:
@@ -126,6 +123,14 @@ class Piece:
     def set_previous_pos(self):
         for block in self.blocks:
             block.pos = block.previous_pos
+
+    def rotate(self):
+        if self.shape != "O":
+            pivot = self.blocks[1].pos
+            for block in self.blocks:
+                translate = block.pos - pivot
+                rotated = translate.rotate(90) + pivot
+                block.move_to(rotated.x, rotated.y)
 
 
 class Game:
@@ -158,6 +163,12 @@ class Game:
                 [self.placed_blocks.append(block) for block in self.piece.blocks]
                 self.handle_clear()
                 self.spawn_piece()
+
+    def handle_rotation_collision(self):
+        placed_positions = [block.pos for block in self.placed_blocks]
+        for piece_block in self.piece.blocks:
+            if piece_block.pos.x < 0 or piece_block.pos.x > COLS - 1 or piece_block.pos.y >= ROWS or piece_block.pos in placed_positions:
+                self.piece.set_previous_pos()
 
     def handle_clear(self, current_row=ROWS - 1):
         if self.placed_blocks and current_row >= 0:
@@ -205,6 +216,9 @@ while running:
             elif event.key == pygame.K_RIGHT:
                 game.piece.move_right()
                 game.handle_horizontal_collision()
+            elif event.key == pygame.K_UP:
+                game.piece.rotate()
+                game.handle_rotation_collision()
 
     game.piece.draw()
     game.draw_placed_blocks()
