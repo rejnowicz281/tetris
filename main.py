@@ -213,9 +213,11 @@ class Game:
 
 
 # Game Loop
+last_update_time = pygame.time.get_ticks()
 game = Game()
 running = True
 while running:
+    fall_speed = 200
     # Ensure 60 FPS
     pygame.time.Clock().tick(60)
 
@@ -236,16 +238,22 @@ while running:
             elif event.key == pygame.K_UP:
                 game.current_piece.rotate()
                 game.handle_rotation_collision()
+    keys = pygame.key.get_pressed()
+
+    if keys[pygame.K_DOWN]:
+        fall_speed = 50
 
     game.current_piece.draw()
     game.draw_placed_blocks()
 
-    if game.state == "running":
-        keys = pygame.key.get_pressed()
+    current_time = pygame.time.get_ticks()
+    elapsed_time = current_time - last_update_time
 
-        if keys[pygame.K_DOWN]:
+    if game.state == "running":
+        if elapsed_time >= fall_speed:
             game.current_piece.move_down()
             game.handle_vertical_collision()
+            last_update_time = current_time
     else:
         draw_text(10, 10, "GAME OVER")
 
