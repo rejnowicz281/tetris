@@ -35,7 +35,7 @@ class Block:
     def draw(self):
         x = self.pos.x * CELL_SIZE
         y = self.pos.y * CELL_SIZE
-        rect = pygame.Rect(x, y, CELL_SIZE, CELL_SIZE)
+        rect = pygame.Rect(x, y, CELL_SIZE-1, CELL_SIZE-1)
         pygame.draw.rect(screen, (0, 0, 255), rect)
 
     def move_down(self):
