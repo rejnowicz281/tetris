@@ -79,45 +79,45 @@ class Block:
 class Piece:
     BLOCK_COMBINATIONS = {
         "I": {
-            "position": [(GAME_MIDDLE - 2, 0), (GAME_MIDDLE - 1, 0),
-                         (GAME_MIDDLE, 0),
-                         (GAME_MIDDLE + 1, 0)],
+            "position": [(- 2, 0), (- 1, 0),
+                         (0, 0),
+                         (+ 1, 0)],
             "color": (255, 0, 0)
         },
         "O": {
-            "position": [(GAME_MIDDLE - 1, 0), (GAME_MIDDLE, 0),
-                         (GAME_MIDDLE - 1, 1),
-                         (GAME_MIDDLE, 1)],
+            "position": [(- 1, 0), (0, 0),
+                         (- 1, 1),
+                         (0, 1)],
             "color": (0, 255, 0)
         },
         "T": {
-            "position": [(GAME_MIDDLE - 1, 0), (GAME_MIDDLE, 0),
-                         (GAME_MIDDLE + 1, 0),
-                         (GAME_MIDDLE, 1)],
+            "position": [(- 1, 0), (0, 0),
+                         (+ 1, 0),
+                         (0, 1)],
             "color": (0, 0, 255)
         },
         "S": {
-            "position": [(GAME_MIDDLE - 1, 0), (GAME_MIDDLE, 0),
-                         (GAME_MIDDLE - 1, 1),
-                         (GAME_MIDDLE - 2, 1)],
+            "position": [(- 1, 0), (0, 0),
+                         (- 1, 1),
+                         (- 2, 1)],
             "color": (255, 255, 0)
         },
         "Z": {
-            "position": [(GAME_MIDDLE - 1, 0), (GAME_MIDDLE, 0),
-                         (GAME_MIDDLE, 1),
-                         (GAME_MIDDLE + 1, 1)],
+            "position": [(- 1, 0), (0, 0),
+                         (0, 1),
+                         (+ 1, 1)],
             "color": (255, 255, 255)
         },
         "J": {
-            "position": [(GAME_MIDDLE - 1, 0), (GAME_MIDDLE - 1, 1),
-                         (GAME_MIDDLE, 1),
-                         (GAME_MIDDLE + 1, 1)],
+            "position": [(- 1, 0), (- 1, 1),
+                         (0, 1),
+                         (+ 1, 1)],
             "color": (106, 90, 205)
         },
         "L": {
-            "position": [(GAME_MIDDLE, 0), (GAME_MIDDLE, 1),
-                         (GAME_MIDDLE - 1, 1),
-                         (GAME_MIDDLE - 2, 1)],
+            "position": [(0, 0), (0, 1),
+                         (- 1, 1),
+                         (- 2, 1)],
             "color": (0, 250, 154)
         }
     }
@@ -133,7 +133,7 @@ class Piece:
 
         combination = self.BLOCK_COMBINATIONS[self.shape]
         color = combination["color"]
-        blocks = [(Block(Vector2(position), color)) for position in combination["position"]]
+        blocks = [(Block(Vector2(position[0]+GAME_MIDDLE, position[1]), color)) for position in combination["position"]]
         self.blocks = blocks
 
     def draw(self):
