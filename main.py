@@ -136,57 +136,76 @@ class Piece:
 class Game:
     def __init__(self):
         self.placed_blocks = []
-        self.pieces_queue = []
+        self.pieces_counter = {
+            "I": 0,
+            "O": 0,
+            "T": 0,
+            "S": 0,
+            "Z": 0,
+            "J": 0,
+            "L": 0
+        }
+        self.bag = []
+        self.refill_bag()
+        self.queue = []
+        self.refill_queue()
         self.state = "running"
-        self.update_pieces_queue()
-        self.current_piece = None
-        self.update_current_piece()
 
-    def update_current_piece(self):
-        self.current_piece = self.pieces_queue[0]
-        del self.pieces_queue[0]
-        self.update_pieces_queue()
+    def current_piece(self):
+        return self.queue[0]
 
-    def update_pieces_queue(self):
-        while len(self.pieces_queue) < 3:
-            random_piece = Piece()
-            current_shapes = [piece.shape for piece in self.pieces_queue]
-            if random_piece.shape not in current_shapes:
-                self.pieces_queue.append(random_piece)
+    def pieces_preview(self):
+        return self.queue[1:]
+
+    def refill_bag(self):
+        if not len(self.bag):
+            while len(self.bag) < len(Piece.BLOCK_COMBINATIONS):
+                random_piece = Piece()
+                current_shapes = [piece.shape for piece in self.bag]
+                if random_piece.shape not in current_shapes:
+                    self.bag.append(random_piece)
+
+    def refill_queue(self):
+        while len(self.queue) < 4:
+            self.queue.append(self.bag[0])
+            del self.bag[0]
 
     def draw_placed_blocks(self):
         [block.draw() for block in self.placed_blocks]
 
     def game_over_check(self):
         placed_positions = [block.pos for block in self.placed_blocks]
-        for piece_block in self.current_piece.blocks:
+        for piece_block in self.current_piece().blocks:
             if piece_block.pos in placed_positions and piece_block.previous_pos is None:
                 self.state = "game_over"
                 break
 
     def handle_horizontal_collision(self):
         placed_positions = [block.pos for block in self.placed_blocks]
-        for piece_block in self.current_piece.blocks:
+        for piece_block in self.current_piece().blocks:
             if piece_block.pos.x < 0 or piece_block.pos.x > COLS - 1 or piece_block.pos in placed_positions:
-                self.current_piece.set_previous_pos()
+                self.current_piece().set_previous_pos()
                 break
 
     def handle_vertical_collision(self):
         placed_positions = [block.pos for block in self.placed_blocks]
-        for piece_block in self.current_piece.blocks:
+        for piece_block in self.current_piece().blocks:
             if piece_block.pos.y >= ROWS or piece_block.pos in placed_positions:
-                self.current_piece.set_previous_pos()
-                [self.placed_blocks.append(block) for block in self.current_piece.blocks]
+                self.current_piece().set_previous_pos()
+                [self.placed_blocks.append(block) for block in self.current_piece().blocks]
                 self.handle_clear()
-                self.update_current_piece()
+                self.pieces_counter[self.current_piece().shape] += 1
+                del self.queue[0]
+                self.refill_bag()
+                self.refill_queue()
                 self.game_over_check()
                 break
 
     def handle_rotation_collision(self):
         placed_positions = [block.pos for block in self.placed_blocks]
-        for piece_block in self.current_piece.blocks:
+        for piece_block in self.current_piece().blocks:
             if piece_block.pos.x < 0 or piece_block.pos.x > COLS - 1 or piece_block.pos.y >= ROWS or piece_block.pos in placed_positions:
-                self.current_piece.set_previous_pos()
+                self.current_piece().set_previous_pos()
                 break
 
     def handle_clear(self, current_row=ROWS - 1):
@@ -219,7 +238,7 @@ last_update_time = pygame.time.get_ticks()
 game = Game()
 running = True
 while running:
-    fall_speed = 200
+    fall_speed = 800
     # Ensure 60 FPS
     pygame.time.Clock().tick(60)
 
@@ -232,20 +251,20 @@ while running:
 
         if event.type == pygame.KEYDOWN and game.state == "running":
             if event.key == pygame.K_LEFT:
-                game.current_piece.move_left()
+                game.current_piece().move_left()
                 game.handle_horizontal_collision()
             elif event.key == pygame.K_RIGHT:
-                game.current_piece.move_right()
+                game.current_piece().move_right()
                 game.handle_horizontal_collision()
             elif event.key == pygame.K_UP:
-                game.current_piece.rotate()
+                game.current_piece().rotate()
                 game.handle_rotation_collision()
     keys = pygame.key.get_pressed()
 
     if keys[pygame.K_DOWN]:
         fall_speed = 50
 
-    game.current_piece.draw()
+    game.current_piece().draw()
     game.draw_placed_blocks()
 
     current_time = pygame.time.get_ticks()
@@ -253,7 +272,7 @@ while running:
 
     if game.state == "running":
         if elapsed_time >= fall_speed:
-            game.current_piece.move_down()
+            game.current_piece().move_down()
             game.handle_vertical_collision()
             last_update_time = current_time
     else:
