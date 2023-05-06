@@ -6,19 +6,33 @@ from pygame.math import Vector2
 # Initialize pygame
 pygame.init()
 
-# Create screen
-ROWS = 20
-COLS = 10
+# Global Screen Variables
 CELL_SIZE = 35
-SCREEN_MIDDLE = COLS / 2
-SCREEN_WIDTH = COLS * CELL_SIZE
-SCREEN_HEIGHT = ROWS * CELL_SIZE
+
+GAME_ROWS = 20
+GAME_COLS = 10
+GAME_MIDDLE = GAME_COLS / 2
+GAME_WIDTH = GAME_COLS * CELL_SIZE
+GAME_HEIGHT = GAME_ROWS * CELL_SIZE
+
+SCREEN_WIDTH = GAME_WIDTH * 2.5
+SCREEN_HEIGHT = GAME_HEIGHT * 1.1
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+
+game_surface = pygame.Surface((GAME_WIDTH, GAME_HEIGHT))
 
 
 def draw_text(x, y, text, font=pygame.font.Font('freesansbold.ttf', 32), color=(255, 255, 255)):
     content = font.render(text, True, color)
     screen.blit(content, (x, y))
+
+
+def draw_game_window():
+    game_rect = game_surface.get_rect()
+    pygame.draw.rect(game_surface, (0, 150, 0), (game_rect.x, game_rect.y, game_rect.width, game_rect.height), 1)
+    screen.blit(game_surface, ((SCREEN_WIDTH - GAME_WIDTH) / 2, (SCREEN_HEIGHT - GAME_HEIGHT) / 2))
+
+    game_surface.fill((10, 10, 10))
 
 
 # Title and Icon
@@ -28,15 +42,16 @@ pygame.display.set_icon(icon)
 
 
 class Block:
-    def __init__(self, pos):
+    def __init__(self, pos, color):
         self.previous_pos = None
         self.pos = pos
+        self.color = color
 
-    def draw(self):
-        x = self.pos.x * CELL_SIZE
-        y = self.pos.y * CELL_SIZE
-        rect = pygame.Rect(x, y, CELL_SIZE - 1, CELL_SIZE - 1)
-        pygame.draw.rect(screen, (0, 0, 255), rect)
+    def draw(self, offset_x=0, offset_y=0, surface=game_surface):
+        x = self.pos.x * CELL_SIZE + offset_x
+        y = self.pos.y * CELL_SIZE + offset_y
+        rect = pygame.Rect(x, y, CELL_SIZE - 2, CELL_SIZE - 2)
+        pygame.draw.rect(surface, self.color, rect)
 
     def move_down(self):
         self.move(0, 1)
@@ -63,46 +78,63 @@ class Block:
 
 class Piece:
     BLOCK_COMBINATIONS = {
-        "I": [(SCREEN_MIDDLE - 2, 0), (SCREEN_MIDDLE - 1, 0),
-              (SCREEN_MIDDLE, 0),
-              (SCREEN_MIDDLE + 1, 0)],
-
-        "O": [(SCREEN_MIDDLE - 1, 0), (SCREEN_MIDDLE, 0),
-              (SCREEN_MIDDLE - 1, 1),
-              (SCREEN_MIDDLE, 1)],
-
-        "T": [(SCREEN_MIDDLE - 1, 0), (SCREEN_MIDDLE, 0),
-              (SCREEN_MIDDLE + 1, 0),
-              (SCREEN_MIDDLE, 1)],
-
-        "S": [(SCREEN_MIDDLE - 1, 0), (SCREEN_MIDDLE, 0),
-              (SCREEN_MIDDLE - 1, 1),
-              (SCREEN_MIDDLE - 2, 1)],
-
-        "Z": [(SCREEN_MIDDLE - 1, 0), (SCREEN_MIDDLE, 0),
-              (SCREEN_MIDDLE, 1),
-              (SCREEN_MIDDLE + 1, 1)],
-
-        "J": [(SCREEN_MIDDLE - 1, 0), (SCREEN_MIDDLE - 1, 1),
-              (SCREEN_MIDDLE, 1),
-              (SCREEN_MIDDLE + 1, 1)],
-
-        "L": [(SCREEN_MIDDLE, 0), (SCREEN_MIDDLE, 1),
-              (SCREEN_MIDDLE - 1, 1),
-              (SCREEN_MIDDLE - 2, 1)]
+        "I": {
+            "position": [(GAME_MIDDLE - 2, 0), (GAME_MIDDLE - 1, 0),
+                         (GAME_MIDDLE, 0),
+                         (GAME_MIDDLE + 1, 0)],
+            "color": (255, 0, 0)
+        },
+        "O": {
+            "position": [(GAME_MIDDLE - 1, 0), (GAME_MIDDLE, 0),
+                         (GAME_MIDDLE - 1, 1),
+                         (GAME_MIDDLE, 1)],
+            "color": (0, 255, 0)
+        },
+        "T": {
+            "position": [(GAME_MIDDLE - 1, 0), (GAME_MIDDLE, 0),
+                         (GAME_MIDDLE + 1, 0),
+                         (GAME_MIDDLE, 1)],
+            "color": (0, 0, 255)
+        },
+        "S": {
+            "position": [(GAME_MIDDLE - 1, 0), (GAME_MIDDLE, 0),
+                         (GAME_MIDDLE - 1, 1),
+                         (GAME_MIDDLE - 2, 1)],
+            "color": (255, 255, 0)
+        },
+        "Z": {
+            "position": [(GAME_MIDDLE - 1, 0), (GAME_MIDDLE, 0),
+                         (GAME_MIDDLE, 1),
+                         (GAME_MIDDLE + 1, 1)],
+            "color": (255, 255, 255)
+        },
+        "J": {
+            "position": [(GAME_MIDDLE - 1, 0), (GAME_MIDDLE - 1, 1),
+                         (GAME_MIDDLE, 1),
+                         (GAME_MIDDLE + 1, 1)],
+            "color": (106, 90, 205)
+        },
+        "L": {
+            "position": [(GAME_MIDDLE, 0), (GAME_MIDDLE, 1),
+                         (GAME_MIDDLE - 1, 1),
+                         (GAME_MIDDLE - 2, 1)],
+            "color": (0, 250, 154)
+        }
     }
 
-    def __init__(self):
-        self.shape = None
+    def __init__(self, shape=None):
+        self.shape = shape
         self.blocks = []
         self.initialize_blocks()
 
     def initialize_blocks(self):
-        random_shape = random.choice(list(self.BLOCK_COMBINATIONS.keys()))
-        combination = self.BLOCK_COMBINATIONS[random_shape]
-        blocks = [(Block(Vector2(position))) for position in combination]
+        if self.shape is None:
+            self.shape = random.choice(list(self.BLOCK_COMBINATIONS.keys()))
+
+        combination = self.BLOCK_COMBINATIONS[self.shape]
+        color = combination["color"]
+        blocks = [(Block(Vector2(position), color)) for position in combination["position"]]
         self.blocks = blocks
-        self.shape = random_shape
 
     def draw(self):
         for block in self.blocks:
@@ -183,14 +215,14 @@ class Game:
     def handle_horizontal_collision(self):
         placed_positions = [block.pos for block in self.placed_blocks]
         for piece_block in self.current_piece().blocks:
-            if piece_block.pos.x < 0 or piece_block.pos.x > COLS - 1 or piece_block.pos in placed_positions:
+            if piece_block.pos.x < 0 or piece_block.pos.x > GAME_COLS - 1 or piece_block.pos in placed_positions:
                 self.current_piece().set_previous_pos()
                 break
 
     def handle_vertical_collision(self):
         placed_positions = [block.pos for block in self.placed_blocks]
         for piece_block in self.current_piece().blocks:
-            if piece_block.pos.y >= ROWS or piece_block.pos in placed_positions:
+            if piece_block.pos.y >= GAME_ROWS or piece_block.pos in placed_positions:
                 self.current_piece().set_previous_pos()
                 [self.placed_blocks.append(block) for block in self.current_piece().blocks]
                 self.handle_clear()
@@ -204,18 +236,18 @@ class Game:
     def handle_rotation_collision(self):
         placed_positions = [block.pos for block in self.placed_blocks]
         for piece_block in self.current_piece().blocks:
-            if piece_block.pos.x < 0 or piece_block.pos.x > COLS - 1 or piece_block.pos.y >= ROWS or piece_block.pos in placed_positions:
+            if piece_block.pos.x < 0 or piece_block.pos.x > GAME_COLS - 1 or piece_block.pos.y >= GAME_ROWS or piece_block.pos in placed_positions:
                 self.current_piece().set_previous_pos()
                 break
 
-    def handle_clear(self, current_row=ROWS - 1):
+    def handle_clear(self, current_row=GAME_ROWS - 1):
         if self.placed_blocks and current_row >= 0:
             current_row_blocks_count = 0
             for block in self.placed_blocks:
                 if block.pos.y == current_row:
                     current_row_blocks_count += 1  # If block is in the current row, increment by 1
 
-                if current_row_blocks_count == COLS:  # If current row is full
+                if current_row_blocks_count == GAME_COLS:  # If current row is full
                     i = 0
                     while i in range(len(self.placed_blocks)):  # Delete all blocks from the current row
                         if self.placed_blocks[i].pos.y == current_row:
@@ -229,8 +261,14 @@ class Game:
 
                     return self.handle_clear()  # Function runs until current row is not full
 
-            if current_row_blocks_count != COLS:  # If current row isn't full, check the next one
+            if current_row_blocks_count != GAME_COLS:  # If current row isn't full, check the next one
                 return self.handle_clear(current_row - 1)
+
+    def draw_pieces_preview(self):
+        draw_text(650, 100, "Next Pieces")
+        for index, piece in enumerate(self.pieces_preview()):
+            for block in piece.blocks:
+                block.draw(600, 140 * (index + 1), screen)
 
 
 # Game Loop
@@ -242,8 +280,11 @@ while running:
     # Ensure 60 FPS
     pygame.time.Clock().tick(60)
 
-    # Background
+    # Screen
     screen.fill((0, 0, 0))
+
+    draw_game_window()
+    game.draw_pieces_preview()
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
