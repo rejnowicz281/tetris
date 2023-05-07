@@ -11,7 +11,6 @@ CELL_SIZE = 35
 
 GAME_ROWS = 20
 GAME_COLS = 10
-GAME_MIDDLE = GAME_COLS / 2
 GAME_WIDTH = GAME_COLS * CELL_SIZE
 GAME_HEIGHT = GAME_ROWS * CELL_SIZE
 
@@ -22,9 +21,9 @@ screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 game_surface = pygame.Surface((GAME_WIDTH, GAME_HEIGHT))
 
 
-def draw_text(x, y, text, font=pygame.font.Font('freesansbold.ttf', 32), color=(255, 255, 255)):
+def draw_text(x, y, text, surface=screen, font=pygame.font.Font('freesansbold.ttf', 32), color=(255, 255, 255)):
     content = font.render(text, True, color)
-    screen.blit(content, (x, y))
+    surface.blit(content, (x, y))
 
 
 def draw_game_window():
@@ -47,7 +46,7 @@ class Block:
         self.pos = pos
         self.color = color
 
-    def draw(self, offset_x=0, offset_y=0, surface=game_surface):
+    def draw(self, surface=game_surface, offset_x=0, offset_y=0):
         x = self.pos.x * CELL_SIZE + offset_x
         y = self.pos.y * CELL_SIZE + offset_y
         rect = pygame.Rect(x, y, CELL_SIZE - 2, CELL_SIZE - 2)
@@ -133,12 +132,13 @@ class Piece:
 
         combination = self.BLOCK_COMBINATIONS[self.shape]
         color = combination["color"]
-        blocks = [(Block(Vector2(position[0]+GAME_MIDDLE, position[1]), color)) for position in combination["position"]]
+        blocks = [(Block(Vector2(position[0] + GAME_COLS / 2, position[1]), color)) for position in
+                  combination["position"]]
         self.blocks = blocks
 
-    def draw(self):
+    def draw(self, surface=game_surface, offset_x=0, offset_y=0):
         for block in self.blocks:
-            block.draw()
+            block.draw(surface, offset_x, offset_y)
 
     def move_left(self):
         for block in self.blocks:
@@ -167,6 +167,9 @@ class Piece:
 
 class Game:
     def __init__(self):
+        self.score = 0
+        self.high_score = 0
+        self.load_high_score()
         self.placed_blocks = []
         self.pieces_counter = {
             "I": 0,
@@ -182,6 +185,17 @@ class Game:
         self.queue = []
         self.refill_queue()
         self.state = "running"
+
+    def load_high_score(self):
+        try:
+            with open("high_score.txt", "r") as high_score_file:
+                self.high_score = int(high_score_file.read())
+        except FileNotFoundError:
+            self.high_score = 0
+
+    def save_high_score(self):
+        with open("high_score.txt", "w") as high_score_file:
+            high_score_file.write(str(self.high_score))
 
     def current_piece(self):
         return self.queue[0]
@@ -240,7 +254,7 @@ class Game:
                 self.current_piece().set_previous_pos()
                 break
 
-    def handle_clear(self, current_row=GAME_ROWS - 1):
+    def handle_clear(self, lines=0, current_row=GAME_ROWS - 1):
         if self.placed_blocks and current_row >= 0:
             current_row_blocks_count = 0
             for block in self.placed_blocks:
@@ -259,16 +273,42 @@ class Game:
                         if block_b.pos.y < current_row:
                             block_b.move_down()
 
-                    return self.handle_clear()  # Function runs until current row is not full
+                    return self.handle_clear(lines + 1)  # Function runs until current row is not full
 
             if current_row_blocks_count != GAME_COLS:  # If current row isn't full, check the next one
-                return self.handle_clear(current_row - 1)
+                if lines == 1:
+                    self.score += 40
+                elif lines == 2:
+                    self.score += 100
+                elif lines == 3:
+                    self.score += 300
+                elif lines == 4:
+                    self.score += 1000
+                return self.handle_clear(0, current_row - 1)
 
     def draw_pieces_preview(self):
-        draw_text(650, 100, "Next Pieces")
+        draw_text(650, 300, "Next Pieces")
         for index, piece in enumerate(self.pieces_preview()):
-            for block in piece.blocks:
-                block.draw(600, 140 * (index + 1), screen)
+            piece.draw(screen, 570, (150 * (index + 1))+200)
+
+    def draw_pieces_counter(self):
+        draw_text(10, 30, "Pieces Counter")
+        for index, piece in enumerate(self.pieces_counter):
+            Piece(piece).draw(screen, -80, 90 * (index + 1))
+            draw_text(180, 90 * (index + 1), str(self.pieces_counter[piece]))
+
+    def draw_score(self):
+        draw_text(650, 40, "Score")
+        draw_text(650, 80, str(self.score))
+
+    def draw_high_score(self):
+        draw_text(650, 130, "High Score")
+        draw_text(650, 180, str(self.high_score))
+
+    def increase_score(self, amount):
+        self.score += amount
+        if self.score > self.high_score:
+            self.high_score = self.score
 
 
 # Game Loop
@@ -285,9 +325,13 @@ while running:
 
     draw_game_window()
     game.draw_pieces_preview()
+    game.draw_pieces_counter()
+    game.draw_high_score()
+    game.draw_score()
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
+            game.save_high_score()
             running = False
 
         if event.type == pygame.KEYDOWN and game.state == "running":
@@ -317,6 +361,6 @@ while running:
             game.handle_vertical_collision()
             last_update_time = current_time
     else:
-        draw_text(10, 10, "GAME OVER")
+        draw_text(350, 0, "GAME OVER")
 
     pygame.display.update()
