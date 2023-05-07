@@ -273,23 +273,19 @@ class Game:
                         if block_b.pos.y < current_row:
                             block_b.move_down()
 
+                    if not self.placed_blocks:
+                        self.increase_score_by_lines_cleared(lines + 1)
+
                     return self.handle_clear(lines + 1)  # Function runs until current row is not full
 
             if current_row_blocks_count != GAME_COLS:  # If current row isn't full, check the next one
-                if lines == 1:
-                    self.score += 40
-                elif lines == 2:
-                    self.score += 100
-                elif lines == 3:
-                    self.score += 300
-                elif lines == 4:
-                    self.score += 1000
+                self.increase_score_by_lines_cleared(lines)
                 return self.handle_clear(0, current_row - 1)
 
     def draw_pieces_preview(self):
         draw_text(650, 300, "Next Pieces")
         for index, piece in enumerate(self.pieces_preview()):
-            piece.draw(screen, 570, (150 * (index + 1))+200)
+            piece.draw(screen, 570, (150 * (index + 1)) + 200)
 
     def draw_pieces_counter(self):
         draw_text(10, 30, "Pieces Counter")
@@ -302,11 +298,19 @@ class Game:
         draw_text(650, 80, str(self.score))
 
     def draw_high_score(self):
-        draw_text(650, 130, "High Score")
+        draw_text(650, 140, "High Score")
         draw_text(650, 180, str(self.high_score))
 
-    def increase_score(self, amount):
-        self.score += amount
+    def increase_score_by_lines_cleared(self, lines):
+        if lines == 1:
+            self.score += 40
+        elif lines == 2:
+            self.score += 100
+        elif lines == 3:
+            self.score += 300
+        elif lines == 4:
+            self.score += 1000
+
         if self.score > self.high_score:
             self.high_score = self.score
 
